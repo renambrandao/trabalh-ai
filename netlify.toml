@@ -1,0 +1,21 @@
+# netlify.toml
+# Arquivo de configuração do Netlify
+
+[build]
+  # Pasta com os arquivos estáticos (HTML, CSS, JS)
+  publish = "."
+  
+  # Pasta com as funções (backend)
+  functions = "functions"
+
+[functions]
+  # Timeout para as funções (em segundos)
+  # Aumentamos para 30s para dar tempo de conectar ao JSONBin
+  timeout = 30
+
+# Redirecionamento de rotas
+# Útil para Single Page Applications
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
