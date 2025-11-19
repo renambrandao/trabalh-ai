@@ -8,55 +8,101 @@ Um projeto inovador que demonstra como inteligência artificial pode colaborar n
 
 ## 📖 O Projeto
 
-**trabalh.ai** é um experimento que nasceu de uma pergunta simples: "Como podemos usar IA para criar um curta-metragem sobre IA?"
+**trabalh.ai** é um experimento que demonstra como inteligência artificial colabora em cada etapa da produção audiovisual. O resultado é um curta de 2 minutos que integra múltiplas "vozes" (AIs):
 
-O resultado é um curta de até 2 minutos que combina:
-- 📹 **Gravações de tela** (screencast)
-- 🤖 **Dois vídeos de 8 segundos gerados por IA** (middle e final)
-- 🎨 **Uma página web interativa** com comentários da comunidade
+- 📹 **Gravação de tela** (screencast) 
+- 🎥 **Vídeo IA de 5 segundos** (meio)
+- 🎥 **Vídeo IA de 8 segundos** (final)
+- 🎵 **Trilha sonora gerada por IA** ⭐
+- 🎨 **Página web interativa** com comentários
 
-### O Fluxo Criativo Original
+### As 7 Janelas do MetaPrompt
+
+O processo segue uma jornada poética por 7 "janelas" (interfaces IA), cada uma contribuindo sua parte:
 
 ```
-1️⃣  IA gera o roteiro
-    └─ Você pede um roteiro sobre o trabalho da IA
+🪟 JANELA 1: Roteiro
+   └─ IA estrutura as cenas, define ordem, marca pontos de inserção
+   
+🪟 JANELA 2: Vídeo do Meio (5s)
+   └─ IA gera o vídeo inicial que entra na metade da gravação de tela
+   
+🪟 JANELA 3: Vídeo Final (8s)
+   └─ IA gera o vídeo de encerramento com conclusão visual
+   
+🪟 JANELA 4: Trilha Sonora ⭐ NOVO
+   └─ IA produz trilha que termina ANTES dos 8s finais
+      (deixa espaço para áudio do vídeo de encerramento)
+   
+🪟 JANELA 5: Montagem (Script)
+   └─ IA orienta script que:
+      • Recebe gravação de tela (Gravação de Tela YYYY-MM-DD)
+      • Pergunta timestamps: quando termina parte 1? quando começa parte 2?
+      • Calcula compressão necessária para exatamente 2 minutos
+      • Insere: [Tela Parte 1] + [Vídeo 5s] + [Tela Parte 2] + [Trilha] + [Vídeo 8s]
+      • Gera arquivo comprimido, leve e otimizado para web
+   
+🪟 JANELA 6: Interface Web
+   └─ IA gera código HTML/CSS/JS com:
+      • Vídeo em ⅔ superior (background sem controles tradicionais)
+      • Campo de comentários à esquerda (⅓ inferior)
+      • Carrossel tipográfico de comentários à direita (⅓ inferior)
+   
+🪟 JANELA 7: Publicação
+   └─ IA indica caminho mais simples: GitHub + Netlify
+      (arquivo .mp4 não entra no git, mas Netlify publica)
+```
 
-2️⃣  IA cria o vídeo do meio (8 segundos)
-    └─ Primeiro vídeo generativo para entrar no meio do curta
+### O Fluxo Completo
 
-3️⃣  IA cria o vídeo final (8 segundos)
-    └─ Segundo vídeo generativo para encerrar o curta
-
-4️⃣  Montagem do curta
-    └─ Script CLI para macOS que compila tudo:
-       • Gravação de tela (parte 1)
-       • + Vídeo IA (8s)
-       • + Gravação de tela (parte 2)
-       • + Vídeo IA (8s)
-
-5️⃣  Publicação interativa
-    └─ Página web com:
-       • Vídeo em ⅔ da tela (background)
-       • Campo de comentários (esquerda)
-       • Carrossel de comentários (direita)
+```
+mil.IA/                          (pasta do projeto)
+│
+├── 🪟 JANELA 1: roteiro.txt      (estrutura do curta)
+│
+├── 🪟 JANELA 2: video-5s-meio.mp4   (gerado por IA)
+│
+├── 🪟 JANELA 3: video-8s-final.mp4  (gerado por IA)
+│
+├── 🪟 JANELA 4: trilha-sonora.mp3   (gerado por IA) ⭐
+│
+├── 📹 Gravação de Tela 2025-11-13...   (gravado pelo humano)
+│
+├── 🪟 JANELA 5: script-montagem.sh  (IA orienta)
+│      ↓ (executa montagem automática)
+│
+├── 🎬 trabalh-ai.mp4            (arquivo final comprimido)
+│
+├── 🪟 JANELA 6: index.html       (página web interativa)
+│
+└── 🪟 JANELA 7: GitHub + Netlify
+       ↓
+       🌐 https://trabalh-ai.netlify.app/
 ```
 
 ---
 
 ## 🎯 Funcionalidades
 
-### Frontend
-- **Vídeo em Background**: O vídeo ocupa 2/3 da tela superior sem parecer um player tradicional
-- **Sistema de Comentários**: Deixe suas impressões sobre o curta
-- **Carrossel Dinâmico**: Visualize todos os comentários em uma animação bonita e tipograficamente refinada
-- **Design Responsivo**: Funciona em desktop, tablet e celular
-- **Controle de Áudio**: Botão para mutar/desmutar o vídeo
+### Produção Audiovisual (7 Janelas)
+- **Roteiro com IA**: Estrutura narrativa gerada
+- **Vídeos Generativos**: 5s (meio) + 8s (final) criados por IA
+- **Trilha Sonora IA**: Música sincronizada, termina antes do áudio final ⭐
+- **Script de Montagem**: Compila tudo automaticamente em 2 minutos exatos
+- **Otimização Automática**: Compressão e ajuste de timing automáticos
+
+### Frontend Interativo
+- **Vídeo em Background**: Ocupa 2/3 superior sem player tradicional
+- **Sistema de Comentários**: Deixe impressões sobre o curta
+- **Carrossel Dinâmico**: Animação tipográfica refinada dos comentários
+- **Design Responsivo**: Desktop, tablet, mobile
+- **Controle de Áudio**: Mutar/desmutar integrado
 
 ### Backend Seguro
-- **API Segura**: Comentários salvos em nuvem via JSONBin.io
-- **Sem Exposição de Credenciais**: API Key guardada no servidor (Netlify Functions)
-- **Persistência de Dados**: Seus comentários ficam salvos permanentemente
-- **Validação Automática**: Prevenção de XSS e dados malformados
+- **API Segura**: Comentários salvos via JSONBin.io
+- **Credenciais Protegidas**: API Key no servidor (Netlify Functions)
+- **Persistência**: Comentários salvos permanentemente
+- **Validação**: Prevenção de XSS e dados inválidos
 
 ---
 
@@ -160,38 +206,45 @@ Seu site estará em: `https://seu-site.netlify.app`
 
 ## 💡 Como o Projeto Foi Criado
 
-Este projeto é um exemplo prático de **prompt engineering e colaboração humano-IA**.
+Este projeto exemplifica **prompt engineering e colaboração humano-IA** em produção audiovisual.
 
-### O Processo
+### O Processo (7 Janelas)
 
-**1. Ideação** 
-```
-Usuário: "Quero um roteiro para um curta metragem sobre o trabalho da IA"
-IA: [Gera roteiro detalhado]
-```
+O criador abre 7 "janelas" (ferramentas/prompts) em sequência:
 
-**2. Produção de Vídeos**
-```
-Usuário: [Executa o roteiro, grava screencast]
-IA: [Gera 2 vídeos de 8 segundos via Runway, Midjourney, etc]
-```
+1. **Janela 1 - Roteiro (IA estrutura)**
+   - Entrada: "Quero um roteiro sobre o trabalho da IA"
+   - Saída: Estrutura completa com cenas e timing
 
-**3. Montagem**
-```
-Usuário: [Usa script CLI para montar tudo automaticamente]
-Script: [Combina screencast + vídeos IA em um curta final]
-```
+2. **Janela 2 - Vídeo Meio (IA gera)**
+   - Entrada: "Gere um vídeo mostrando IA tomando forma"
+   - Saída: Video 5 segundos
 
-**4. Publicação**
-```
-IA: [Gera código web para exibir o curta]
-Usuário: [Deploy no Netlify]
-Comunidade: [Assiste e deixa comentários]
-```
+3. **Janela 3 - Vídeo Final (IA gera)**
+   - Entrada: "Gere um vídeo de encerramento/conclusão"
+   - Saída: Video 8 segundos
 
-### O Prompt Original
+4. **Janela 4 - Trilha Sonora (IA compõe)** ⭐
+   - Entrada: "Crie trilha com clima [X], duração ~1:52 (antes dos 8s finais)"
+   - Saída: MP3 sincronizado
 
-Veja [**PROMPT-INICIAL.md**](PROMPT-INICIAL.md) para entender exatamente como este projeto nasceu.
+5. **Janela 5 - Montagem (IA guia)**
+   - Entrada: "Montar curta com esses elementos em 2 minutos exatos"
+   - Saída: Script que automatiza tudo
+
+6. **Janela 6 - Interface (IA codifica)**
+   - Entrada: "Crie página com vídeo ⅔ + comentários ⅓"
+   - Saída: Código HTML/CSS/JS pronto
+
+7. **Janela 7 - Publicação (IA indica)**
+   - Entrada: "Como colocar isso no ar simplesmente?"
+   - Saída: GitHub + Netlify (caminho mais direto)
+
+### O Resultado
+
+Cada "janela" contribui seu trabalho. O humano coordena. No final: um curta-metragem ao vivo com comunidade.
+
+Este projeto demonstra que **IA não substitui criatividade** — amplifica.
 
 ---
 
