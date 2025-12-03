@@ -1,6 +1,6 @@
 # 🎬 trabalh.ai - Explorando o Trabalho da IA através do Cinema
 
-Um projeto inovador que demonstra como inteligência artificial pode colaborar na criação de conteúdo audiovisual. Este repositório contém uma página web interativa que exibe um curta-metragem sobre "O Trabalho da IA" com um sistema comunitário de comentários.
+Um projeto que demonstra como inteligência artificial pode colaborar na criação de conteúdo audiovisual. Este repositório contém uma página web interativa que exibe um curta-metragem sobre "O Trabalho da IA" com um sistema comunitário de comentários.
 
 🌐 **[Veja o projeto ao vivo →](https://trabalh-ai.netlify.app/)**
 
