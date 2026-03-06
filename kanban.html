@@ -123,9 +123,18 @@ header h1:hover { background: rgba(255,255,255,.2); }
   flex-direction: column;
   max-height: calc(100vh - 76px);
   flex-shrink: 0;
+  transition: opacity .15s;
+}
+
+.column.col-dragging { opacity: .4; }
+
+.column.col-drag-over {
+  border: 2px dashed rgba(0,0,0,.25);
+  background: rgba(0,0,0,.04);
 }
 
 .column-header {
+  cursor: grab;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -627,7 +636,40 @@ function render() {
   board.columns.forEach(col => {
     const colEl = document.createElement('div');
     colEl.className = 'column';
+    colEl.draggable = true;
     colEl.dataset.colId = col.id;
+
+    // Column drag events
+    colEl.addEventListener('dragstart', e => {
+      if (e.target !== colEl) return; // let card drags pass through
+      colEl.classList.add('col-dragging');
+      e.dataTransfer.setData('application/kanban-column', col.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    colEl.addEventListener('dragend', () => colEl.classList.remove('col-dragging'));
+    colEl.addEventListener('dragover', e => {
+      if (!e.dataTransfer.types.includes('application/kanban-column')) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      colEl.classList.add('col-drag-over');
+    });
+    colEl.addEventListener('dragleave', () => colEl.classList.remove('col-drag-over'));
+    colEl.addEventListener('drop', async e => {
+      if (!e.dataTransfer.types.includes('application/kanban-column')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      colEl.classList.remove('col-drag-over');
+      const fromColId = e.dataTransfer.getData('application/kanban-column');
+      if (fromColId === col.id) return;
+      const board = currentBoard();
+      const fromIdx = board.columns.findIndex(c => c.id === fromColId);
+      const toIdx = board.columns.findIndex(c => c.id === col.id);
+      if (fromIdx === -1 || toIdx === -1) return;
+      const [moved] = board.columns.splice(fromIdx, 1);
+      board.columns.splice(toIdx, 0, moved);
+      await persist();
+      render();
+    });
 
     colEl.innerHTML = `
       <div class="column-header">
@@ -680,6 +722,7 @@ function render() {
 
       // Drag events
       cardEl.addEventListener('dragstart', e => {
+        e.stopPropagation(); // prevent column drag
         cardEl.classList.add('dragging');
         e.dataTransfer.setData('text/plain', JSON.stringify({ cardId: card.id, fromColId: col.id }));
         e.dataTransfer.effectAllowed = 'move';
@@ -689,8 +732,9 @@ function render() {
       cardList.appendChild(cardEl);
     });
 
-    // Drop zone events
+    // Drop zone events (cards only)
     cardList.addEventListener('dragover', e => {
+      if (e.dataTransfer.types.includes('application/kanban-column')) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       cardList.classList.add('drag-over');
@@ -709,7 +753,9 @@ function render() {
     cardList.addEventListener('dragleave', () => cardList.classList.remove('drag-over'));
 
     cardList.addEventListener('drop', async e => {
+      if (e.dataTransfer.types.includes('application/kanban-column')) return;
       e.preventDefault();
+      e.stopPropagation();
       cardList.classList.remove('drag-over');
 
       const data = JSON.parse(e.dataTransfer.getData('text/plain'));
