@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Board</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0079bf;
+  --board-bg: #0067a3;
+  --col-bg: #ebecf0;
+  --card-bg: #fff;
+  --text: #172b4d;
+  --text-light: #5e6c84;
+  --accent: #0079bf;
+  --danger: #eb5a46;
+  --success: #61bd4f;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.18);
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: auto;
+}
+
+/* Header */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(0,0,0,.15);
+  backdrop-filter: blur(4px);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+header h1:hover { background: rgba(255,255,255,.2); }
+
+.header-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.header-actions select {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255,255,255,.3);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.header-actions select option { color: #333; background: #fff; }
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.btn-light {
+  background: rgba(255,255,255,.3);
+  color: #fff;
+}
+
+.btn-light:hover { background: rgba(255,255,255,.5); }
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #006aa8; }
+
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { opacity: .85; }
+
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { opacity: .85; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-light);
+}
+.btn-ghost:hover { background: rgba(0,0,0,.06); }
+
+/* Board */
+#board {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  min-height: calc(100vh - 52px);
+  align-items: flex-start;
+  overflow-x: auto;
+}
+
+/* Column */
+.column {
+  min-width: 272px;
+  max-width: 272px;
+  background: var(--col-bg);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 76px);
+  flex-shrink: 0;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 0;
+  gap: 4px;
+}
+
+.column-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  flex: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  word-break: break-word;
+}
+
+.column-header h2:hover { background: rgba(0,0,0,.06); }
+
+.column-header .count {
+  font-size: 12px;
+  color: var(--text-light);
+  padding: 2px 6px;
+  background: rgba(0,0,0,.06);
+  border-radius: 10px;
+}
+
+.column-menu {
+  position: relative;
+}
+
+.column-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 16px;
+  color: var(--text-light);
+}
+
+.column-menu-btn:hover { background: rgba(0,0,0,.08); }
+
+.column-menu-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 8px 16px rgba(0,0,0,.15);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.column-menu-dropdown.open { display: block; }
+
+.column-menu-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.column-menu-dropdown button:hover { background: #f0f0f0; }
+.column-menu-dropdown button.text-danger { color: var(--danger); }
+
+.card-list {
+  padding: 4px 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 8px;
+}
+
+.card-list.drag-over {
+  background: rgba(0,0,0,.04);
+  border-radius: 4px;
+}
+
+/* Card */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  cursor: grab;
+  position: relative;
+  transition: box-shadow .15s;
+  word-break: break-word;
+}
+
+.card:hover { box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.card.dragging { opacity: .5; }
+
+.card-labels {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.card-label {
+  display: inline-block;
+  width: 40px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.card-title {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.card-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.card-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: none;
+}
+
+.card:hover .card-actions { display: flex; gap: 2px; }
+
+.card-actions button {
+  background: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-actions button:hover { background: #ddd; }
+
+/* Add card / column */
+.add-card-form, .add-column-form {
+  padding: 8px;
+}
+
+.add-card-form textarea, .add-column-form input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+}
+
+.add-card-form .form-actions, .add-column-form .form-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.add-card-btn {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  text-align: left;
+  font-size: 14px;
+  color: var(--text-light);
+  cursor: pointer;
+}
+
+.add-card-btn:hover {
+  background: rgba(0,0,0,.04);
+  color: var(--text);
+}
+
+#add-column-btn {
+  min-width: 272px;
+  background: rgba(255,255,255,.24);
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  flex-shrink: 0;
+  height: fit-content;
+}
+
+#add-column-btn:hover { background: rgba(255,255,255,.35); }
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 500;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 16px;
+  overflow-y: auto;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: #f4f5f7;
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 600px;
+  padding: 20px 24px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text-light);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover { background: rgba(0,0,0,.08); }
+
+.modal h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  padding-right: 32px;
+}
+
+.modal label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin: 12px 0 4px;
+}
+
+.modal input[type="text"], .modal textarea, .modal select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.modal input[type="text"]:focus, .modal textarea:focus {
+  border-color: var(--accent);
+}
+
+.modal textarea { resize: vertical; min-height: 80px; }
+
+.modal .label-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.modal .label-picker span {
+  width: 32px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color .1s;
+}
+
+.modal .label-picker span.selected { border-color: var(--text); }
+.modal .label-picker span:hover { opacity: .8; }
+
+.modal .modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* Board name edit inline */
+.inline-edit {
+  background: rgba(255,255,255,.9);
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .column { min-width: 85vw; max-width: 85vw; }
+  #add-column-btn { min-width: 85vw; }
+}
+
+/* Import/export area */
+#import-file { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="board-name" title="Clique para renomear">Meu Quadro</h1>
+  <div class="header-actions">
+    <select id="board-selector" title="Trocar quadro"></select>
+    <button class="btn btn-light" onclick="createBoard()">+ Quadro</button>
+    <button class="btn btn-light" onclick="deleteCurrentBoard()">Excluir Quadro</button>
+    <button class="btn btn-light" onclick="exportJSON()">Exportar JSON</button>
+    <button class="btn btn-light" onclick="document.getElementById('import-file').click()">Importar JSON</button>
+    <input type="file" id="import-file" accept=".json" onchange="importJSON(event)">
+  </div>
+</header>
+
+<div id="board"></div>
+
+<!-- Card Edit Modal -->
+<div class="modal-overlay" id="card-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCardModal()">&times;</button>
+    <h3 id="modal-title">Editar Cartao</h3>
+    <label>Titulo</label>
+    <input type="text" id="modal-card-title">
+    <label>Descricao</label>
+    <textarea id="modal-card-desc" rows="4"></textarea>
+    <label>Etiquetas</label>
+    <div class="label-picker" id="modal-labels"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="modal-delete-btn">Excluir</button>
+      <button class="btn btn-primary" id="modal-save-btn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== IndexedDB Layer ====================
+const DB_NAME = 'KanbanDB';
+const DB_VERSION = 1;
+const STORE = 'boards';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbGetAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const store = tx.objectStore(STORE);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPut(board) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    store.put(board);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbDelete(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    store.delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ==================== State ====================
+const LABEL_COLORS = ['#61bd4f','#f2d600','#ff9f1a','#eb5a46','#c377e0','#0079bf','#00c2e0','#51e898','#ff78cb','#344563'];
+
+let boards = [];
+let currentBoardId = null;
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function currentBoard() {
+  return boards.find(b => b.id === currentBoardId);
+}
+
+function newBoard(name) {
+  return {
+    id: uid(),
+    name: name || 'Novo Quadro',
+    columns: [
+      { id: uid(), name: 'A Fazer', cards: [] },
+      { id: uid(), name: 'Em Progresso', cards: [] },
+      { id: uid(), name: 'Concluido', cards: [] }
+    ]
+  };
+}
+
+// ==================== Persistence ====================
+async function saveBoard(board) {
+  if (!board) return;
+  await dbPut(board);
+}
+
+async function loadBoards() {
+  boards = await dbGetAll();
+  if (boards.length === 0) {
+    const b = newBoard('Meu Quadro');
+    boards.push(b);
+    await saveBoard(b);
+  }
+  const savedId = localStorage.getItem('kanban_current_board');
+  if (savedId && boards.find(b => b.id === savedId)) {
+    currentBoardId = savedId;
+  } else {
+    currentBoardId = boards[0].id;
+  }
+  localStorage.setItem('kanban_current_board', currentBoardId);
+}
+
+async function persist() {
+  const b = currentBoard();
+  if (b) await saveBoard(b);
+}
+
+// ==================== Render ====================
+function renderBoardSelector() {
+  const sel = document.getElementById('board-selector');
+  sel.innerHTML = boards.map(b =>
+    `<option value="${b.id}" ${b.id === currentBoardId ? 'selected' : ''}>${escHTML(b.name)}</option>`
+  ).join('');
+}
+
+function escHTML(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function render() {
+  const board = currentBoard();
+  if (!board) return;
+
+  document.getElementById('board-name').textContent = board.name;
+  document.title = board.name + ' - Kanban';
+  renderBoardSelector();
+
+  const container = document.getElementById('board');
+  container.innerHTML = '';
+
+  board.columns.forEach(col => {
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.colId = col.id;
+
+    colEl.innerHTML = `
+      <div class="column-header">
+        <span class="count">${col.cards.length}</span>
+        <h2 onclick="editColumnName('${col.id}')">${escHTML(col.name)}</h2>
+        <div class="column-menu">
+          <button class="column-menu-btn" onclick="toggleColMenu(this)">&#8943;</button>
+          <div class="column-menu-dropdown">
+            <button onclick="editColumnName('${col.id}')">Renomear</button>
+            <button onclick="moveColumn('${col.id}', -1)">Mover p/ esquerda</button>
+            <button onclick="moveColumn('${col.id}', 1)">Mover p/ direita</button>
+            <button class="text-danger" onclick="deleteColumn('${col.id}')">Excluir coluna</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-list" data-col-id="${col.id}"></div>
+      <button class="add-card-btn" onclick="showAddCard('${col.id}')">+ Adicionar cartao</button>
+    `;
+
+    const cardList = colEl.querySelector('.card-list');
+
+    col.cards.forEach(card => {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.draggable = true;
+      cardEl.dataset.cardId = card.id;
+      cardEl.dataset.colId = col.id;
+
+      let labelsHTML = '';
+      if (card.labels && card.labels.length) {
+        labelsHTML = '<div class="card-labels">' +
+          card.labels.map(c => `<span class="card-label" style="background:${c}"></span>`).join('') +
+          '</div>';
+      }
+
+      let metaHTML = '';
+      if (card.description) {
+        metaHTML = '<div class="card-meta"><span title="Tem descricao">&#9776;</span></div>';
+      }
+
+      cardEl.innerHTML = `
+        ${labelsHTML}
+        <span class="card-title">${escHTML(card.title)}</span>
+        ${metaHTML}
+        <div class="card-actions">
+          <button title="Editar" onclick="openCardModal('${col.id}','${card.id}')">&#9998;</button>
+          <button title="Excluir" onclick="deleteCard('${col.id}','${card.id}')">&#10005;</button>
+        </div>
+      `;
+
+      // Drag events
+      cardEl.addEventListener('dragstart', e => {
+        cardEl.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', JSON.stringify({ cardId: card.id, fromColId: col.id }));
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      cardEl.addEventListener('dragend', () => cardEl.classList.remove('dragging'));
+
+      cardList.appendChild(cardEl);
+    });
+
+    // Drop zone events
+    cardList.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      cardList.classList.add('drag-over');
+
+      const afterEl = getDragAfterElement(cardList, e.clientY);
+      const dragging = document.querySelector('.dragging');
+      if (dragging) {
+        if (afterEl) {
+          cardList.insertBefore(dragging, afterEl);
+        } else {
+          cardList.appendChild(dragging);
+        }
+      }
+    });
+
+    cardList.addEventListener('dragleave', () => cardList.classList.remove('drag-over'));
+
+    cardList.addEventListener('drop', async e => {
+      e.preventDefault();
+      cardList.classList.remove('drag-over');
+
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const { cardId, fromColId } = data;
+      const toColId = col.id;
+
+      const board = currentBoard();
+      const fromCol = board.columns.find(c => c.id === fromColId);
+      const toCol = board.columns.find(c => c.id === toColId);
+      if (!fromCol || !toCol) return;
+
+      const cardIdx = fromCol.cards.findIndex(c => c.id === cardId);
+      if (cardIdx === -1) return;
+      const [card] = fromCol.cards.splice(cardIdx, 1);
+
+      // Find position from DOM
+      const cardEls = [...cardList.querySelectorAll('.card')];
+      const droppedEl = cardEls.find(el => el.dataset.cardId === cardId);
+      const domIdx = droppedEl ? cardEls.indexOf(droppedEl) : cardEls.length;
+
+      toCol.cards.splice(domIdx, 0, card);
+      await persist();
+      render();
+    });
+
+    container.appendChild(colEl);
+  });
+
+  // Add column button
+  const addColBtn = document.createElement('button');
+  addColBtn.id = 'add-column-btn';
+  addColBtn.textContent = '+ Adicionar coluna';
+  addColBtn.onclick = () => showAddColumn();
+  container.appendChild(addColBtn);
+}
+
+function getDragAfterElement(cardList, y) {
+  const cards = [...cardList.querySelectorAll('.card:not(.dragging)')];
+  let closest = null;
+  let closestOffset = Number.NEGATIVE_INFINITY;
+  cards.forEach(child => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closestOffset) {
+      closestOffset = offset;
+      closest = child;
+    }
+  });
+  return closest;
+}
+
+// ==================== Column Actions ====================
+function toggleColMenu(btn) {
+  document.querySelectorAll('.column-menu-dropdown.open').forEach(d => {
+    if (d !== btn.nextElementSibling) d.classList.remove('open');
+  });
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('column-menu-btn')) {
+    document.querySelectorAll('.column-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+function editColumnName(colId) {
+  const board = currentBoard();
+  const col = board.columns.find(c => c.id === colId);
+  if (!col) return;
+  const name = prompt('Nome da coluna:', col.name);
+  if (name !== null && name.trim()) {
+    col.name = name.trim();
+    persist().then(render);
+  }
+}
+
+async function moveColumn(colId, dir) {
+  const board = currentBoard();
+  const idx = board.columns.findIndex(c => c.id === colId);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= board.columns.length) return;
+  [board.columns[idx], board.columns[newIdx]] = [board.columns[newIdx], board.columns[idx]];
+  await persist();
+  render();
+}
+
+async function deleteColumn(colId) {
+  if (!confirm('Excluir esta coluna e todos os cartoes?')) return;
+  const board = currentBoard();
+  board.columns = board.columns.filter(c => c.id !== colId);
+  await persist();
+  render();
+}
+
+function showAddColumn() {
+  const name = prompt('Nome da nova coluna:');
+  if (name && name.trim()) {
+    const board = currentBoard();
+    board.columns.push({ id: uid(), name: name.trim(), cards: [] });
+    persist().then(render);
+  }
+}
+
+// ==================== Card Actions ====================
+function showAddCard(colId) {
+  const colEl = document.querySelector(`.column[data-col-id="${colId}"]`);
+  const addBtn = colEl.querySelector('.add-card-btn');
+
+  if (colEl.querySelector('.add-card-form')) return;
+
+  addBtn.style.display = 'none';
+
+  const form = document.createElement('div');
+  form.className = 'add-card-form';
+  form.innerHTML = `
+    <textarea placeholder="Titulo do cartao..." rows="3" autofocus></textarea>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="submitAddCard('${colId}', this)">Adicionar</button>
+      <button class="btn btn-ghost" onclick="cancelAddCard('${colId}', this)">&times;</button>
+    </div>
+  `;
+  colEl.appendChild(form);
+
+  const ta = form.querySelector('textarea');
+  ta.focus();
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitAddCard(colId, form.querySelector('.btn-primary'));
+    }
+    if (e.key === 'Escape') cancelAddCard(colId, form.querySelector('.btn-ghost'));
+  });
+}
+
+async function submitAddCard(colId, btn) {
+  const form = btn.closest('.add-card-form');
+  const title = form.querySelector('textarea').value.trim();
+  if (!title) return;
+
+  const board = currentBoard();
+  const col = board.columns.find(c => c.id === colId);
+  col.cards.push({ id: uid(), title, description: '', labels: [] });
+  await persist();
+  render();
+}
+
+function cancelAddCard(colId, btn) {
+  const colEl = document.querySelector(`.column[data-col-id="${colId}"]`);
+  const form = colEl.querySelector('.add-card-form');
+  if (form) form.remove();
+  colEl.querySelector('.add-card-btn').style.display = '';
+}
+
+async function deleteCard(colId, cardId) {
+  const board = currentBoard();
+  const col = board.columns.find(c => c.id === colId);
+  col.cards = col.cards.filter(c => c.id !== cardId);
+  await persist();
+  render();
+}
+
+// ==================== Card Modal ====================
+let modalColId = null, modalCardId = null;
+
+function openCardModal(colId, cardId) {
+  const board = currentBoard();
+  const col = board.columns.find(c => c.id === colId);
+  const card = col.cards.find(c => c.id === cardId);
+  if (!card) return;
+
+  modalColId = colId;
+  modalCardId = cardId;
+
+  document.getElementById('modal-card-title').value = card.title;
+  document.getElementById('modal-card-desc').value = card.description || '';
+
+  const picker = document.getElementById('modal-labels');
+  picker.innerHTML = LABEL_COLORS.map(c => {
+    const sel = (card.labels || []).includes(c) ? 'selected' : '';
+    return `<span style="background:${c}" class="${sel}" data-color="${c}" onclick="toggleLabel(this)"></span>`;
+  }).join('');
+
+  document.getElementById('modal-delete-btn').onclick = async () => {
+    await deleteCard(colId, cardId);
+    closeCardModal();
+  };
+
+  document.getElementById('modal-save-btn').onclick = async () => {
+    card.title = document.getElementById('modal-card-title').value.trim() || card.title;
+    card.description = document.getElementById('modal-card-desc').value.trim();
+    card.labels = [...picker.querySelectorAll('.selected')].map(s => s.dataset.color);
+    await persist();
+    render();
+    closeCardModal();
+  };
+
+  document.getElementById('card-modal').classList.add('open');
+}
+
+function closeCardModal() {
+  document.getElementById('card-modal').classList.remove('open');
+  modalColId = null;
+  modalCardId = null;
+}
+
+function toggleLabel(span) {
+  span.classList.toggle('selected');
+}
+
+document.getElementById('card-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('card-modal')) closeCardModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCardModal();
+});
+
+// ==================== Board Actions ====================
+async function createBoard() {
+  const name = prompt('Nome do novo quadro:');
+  if (!name || !name.trim()) return;
+  const b = newBoard(name.trim());
+  boards.push(b);
+  await saveBoard(b);
+  currentBoardId = b.id;
+  localStorage.setItem('kanban_current_board', currentBoardId);
+  render();
+}
+
+async function deleteCurrentBoard() {
+  if (boards.length <= 1) {
+    alert('Voce deve ter pelo menos um quadro.');
+    return;
+  }
+  if (!confirm(`Excluir o quadro "${currentBoard().name}"?`)) return;
+  await dbDelete(currentBoardId);
+  boards = boards.filter(b => b.id !== currentBoardId);
+  currentBoardId = boards[0].id;
+  localStorage.setItem('kanban_current_board', currentBoardId);
+  render();
+}
+
+document.getElementById('board-selector').addEventListener('change', e => {
+  currentBoardId = e.target.value;
+  localStorage.setItem('kanban_current_board', currentBoardId);
+  render();
+});
+
+// Board name inline edit
+document.getElementById('board-name').addEventListener('click', () => {
+  const h1 = document.getElementById('board-name');
+  const board = currentBoard();
+  const input = document.createElement('input');
+  input.className = 'inline-edit';
+  input.value = board.name;
+  h1.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const finish = async () => {
+    const val = input.value.trim();
+    if (val) board.name = val;
+    await persist();
+    const newH1 = document.createElement('h1');
+    newH1.id = 'board-name';
+    newH1.title = 'Clique para renomear';
+    newH1.textContent = board.name;
+    newH1.addEventListener('click', arguments.callee);
+    input.replaceWith(newH1);
+    renderBoardSelector();
+    document.title = board.name + ' - Kanban';
+    // Re-attach click handler
+    document.getElementById('board-name').addEventListener('click', boardNameClick);
+  };
+
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') { input.value = board.name; input.blur(); }
+  });
+});
+
+function boardNameClick() {
+  const h1 = document.getElementById('board-name');
+  const board = currentBoard();
+  const input = document.createElement('input');
+  input.className = 'inline-edit';
+  input.value = board.name;
+  h1.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const finish = async () => {
+    const val = input.value.trim();
+    if (val) board.name = val;
+    await persist();
+    const newH1 = document.createElement('h1');
+    newH1.id = 'board-name';
+    newH1.title = 'Clique para renomear';
+    newH1.textContent = board.name;
+    input.replaceWith(newH1);
+    renderBoardSelector();
+    document.title = board.name + ' - Kanban';
+    newH1.addEventListener('click', boardNameClick);
+  };
+
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') { input.value = board.name; input.blur(); }
+  });
+}
+
+// ==================== Import / Export ====================
+function exportJSON() {
+  const data = { version: 1, exportedAt: new Date().toISOString(), boards };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kanban-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!data.boards || !Array.isArray(data.boards)) {
+      alert('Arquivo JSON invalido: nao contem quadros.');
+      return;
+    }
+
+    const mode = confirm(
+      'Deseja SUBSTITUIR todos os quadros existentes?\n\n' +
+      'OK = Substituir tudo\nCancelar = Adicionar aos existentes'
+    );
+
+    if (mode) {
+      // Replace all
+      for (const b of boards) await dbDelete(b.id);
+      boards = data.boards;
+    } else {
+      // Merge: add imported boards with new IDs to avoid conflicts
+      for (const b of data.boards) {
+        b.id = uid();
+        b.columns.forEach(c => {
+          c.id = uid();
+          c.cards.forEach(card => { card.id = uid(); });
+        });
+        boards.push(b);
+      }
+    }
+
+    for (const b of boards) await saveBoard(b);
+    currentBoardId = boards[0].id;
+    localStorage.setItem('kanban_current_board', currentBoardId);
+    render();
+    alert(`Importados ${data.boards.length} quadro(s) com sucesso!`);
+  } catch (err) {
+    alert('Erro ao importar: ' + err.message);
+  }
+
+  event.target.value = '';
+}
+
+// ==================== Init ====================
+(async () => {
+  await loadBoards();
+  render();
+})();
+</script>
+</body>
+</html>
